@@ -1,0 +1,56 @@
+{% extends 'base.html' %} {% block content %} {% macro show_errors(field) %} {%
+for err in field.errors %} {% if request.method == 'POST' %}
+<span style="color: rgb(177, 0, 59)">{{err}}</span>
+{% endif %} {% endfor %} {% endmacro %}
+
+<div class="container my-5">
+  <div
+    class="p-5 text-center rounded-3 bg-image"
+    style="
+            background-image: url('{{ url_for('static', filename='assets/img/login.jpg')}}');
+            height: 50vh;"
+  >
+    <div class="mask" style="background-color: rgba(219, 213, 189, 0.8)">
+      <div class="d-flex justify-content-center align-items-center h-100">
+        <h1 class="text-black mb-0 display-1">Login</h1>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-sm">
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <div class="d-flex justify-content-center">
+        {% with messages = get_flashed_messages() %} {% if messages %} {% for
+        message in messages %}
+        <p class="flash" style="color: red">{{ message }}</p>
+        {% endfor %} {% endif %} {% endwith %}
+      </div>
+      <form method="post" , action="{{ url_for('login')}}" novalidate>
+        {{ form.csrf_token }}
+
+        <div data-mdb-input-init class="form-outline mb-4">
+          {{ form.email(id="email", class="form-control") }} {{
+          form.email.label(class="form-label", for="email") }} {{
+          show_errors(form.email) }}
+        </div>
+
+        <div data-mdb-input-init class="form-outline mb-4">
+          {{ form.password(id="password", class="form-control form-control-lg")
+          }} {{ form.password.label(class="form-label", for="password") }} {{
+          show_errors(form.password) }}
+        </div>
+
+        {{ form.submit(class="btn btn-outline-dark btn-block")}}
+      </form>
+      <p class="text-center text-muted mt-5 mb-0">
+        Have no account?
+        <a href="{{ url_for('register')}}" class="fw-bold text-body"
+          ><u>Register here</u></a
+        >
+      </p>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
