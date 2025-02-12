@@ -1,5 +1,6 @@
 import os
 import secrets
+from typing import List
 
 from flask import Flask, flash, redirect, render_template, url_for
 from flask_login import (
@@ -12,8 +13,8 @@ from flask_login import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 from wtforms import EmailField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email
@@ -36,10 +37,30 @@ db.init_app(app)
 
 ## Models
 class User(db.Model, UserMixin):
+    __tablename__ = "user_table"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
+    lists: Mapped[List["TodoList"]] = relationship(back_populates="user")
+
+
+class TodoList(db.Model):
+    __tablename__ = "list_table"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_table.id"))
+    user: Mapped["User"] = relationship(back_populates="lists")
+    items: Mapped[List["ListItem"]] = relationship(back_populates="list")
+
+
+class ListItem(db.Model):
+    __tablename__ = "item_table"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    item_description: Mapped[str] = mapped_column(String, nullable=False)
+    finished: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    list_id: Mapped[int] = mapped_column(ForeignKey("list_table.id"))
+    list: Mapped["TodoList"] = relationship(back_populates="items")
 
 
 with app.app_context():
@@ -74,7 +95,7 @@ class RegisterForm(FlaskForm):
 def home():
     if current_user.is_authenticated:
         return render_template("home.html")
-    
+
     return redirect("/login")
 
 
@@ -97,6 +118,7 @@ def login():
         return redirect("/")
 
     return render_template("login.html", form=form)
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
